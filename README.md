@@ -1,74 +1,238 @@
-# Flask Boilerplate for Profesional Development
+# ![alt text](https://assets.breatheco.de/apis/img/images.php?blob&random&cat=icon&tags=breathecode,32) Lista de Contacto con REST API en Flask
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/from-referrer/)
-<p align="center">
-    <a href="https://youtu.be/ORxQ-K3BzQA"><img height="200px" src="https://github.com/4GeeksAcademy/flask-rest-hello/blob/master/docs/assets/how-to.png?raw=true" /></a>
-</p>
+Crear y mantener las API REST es EL trabajo diario para la mayoría de los desarrolladores backend, por lo que es una habilidad que necesitamos para madurar. En este proyecto practicaremos cada paso del proceso de desarrollo de API.
 
-## Features
+Vamos a construir la API que gestiona una base de datos de contactos y expondrá públicamente los endpoints para que las aplicaciones del cliente (incluida la nuestra) puedan usarla. Esta vez incluiremos *Groups*, una nueva entidad que permitirá al sistema agrupar *Contacts*. Ejemplo: Trabajo, Familia, Amigos. **Sugerencia**: podemos implementar esta lógica utilizando una relación *many-to-many* entre las dos tablas.
 
-- Extensive documentation [here](https://github.com/4GeeksAcademy/flask-rest-hello/tree/master/docs).
-- Integrated with Pipenv for package managing.
-- Fast deloyment to heroku with `$ pipenv run deploy`.
-- Use of `.env` file.
-- SQLAlchemy integration for database abstraction.
+## 📝 Instrucciones
 
-## Installation (automatic if you are using gitpod)
+Crea una API con los siguientes endpoints:
 
-> Important: The boiplerplate is made for python 3.7 but you can easily change the `python_version` on the Pipfile.
+1. Obtenga una lista de todos los contactos `GET /contact/all`
+2. Crear un nuevo Contacto `POST /contact`
+3. Obtener un Contacto específico (con los objetos del grupo al que pertenece) `GET /contact/{contact_id}`
+4. Eliminar un Contacto `DELETE /contact/{contact_id}`
+5. Actualiza el Contacto `UPDATE /contact/{contact_id}`
+6. Obtener una lista de todos los nombres e IDs del grupo `GET /group/all`
+7. Crea un nuevo Grupo `POST /group`
+8. Obtener un grupo específico (con todos los objetos de contacto relacionados con él) `GET /group/{group_id}`
+9. Actualizar el nombre de grupo `UPDATE /group/{group_id}`
+10. Elimina un Grupo `DELETE /group/{group_id}`
 
-The following steps are automatically runned withing gitpod, if you are doing a local installation you have to do them manually:
+Un contacto debe tener la siguiente estructura de datos en la base de datos:
+```python
+# Contact
+    id: (int, primary_key)
+    full_name: (string, mandatory)
+    email: (string, mandatory)
+    address: (string, optional)
+    phone: (string, optional)
+    groups: (list of foreign_key)
 
-```sh
-pipenv install;
-mysql -u root -e "CREATE DATABASE example";
-pipenv run init;
-pipenv run migrate;
-pipenv run upgrade;
+# Group
+    id: (int, primary_key)
+    name: (string, mandatory)
+    contacts: (list of foreign_key)
 ```
 
-## How to Start coding?
+## Documentación formal DE API
 
-There is an example API working with an example database. All your application code should be written inside the `./src/` folder.
-
-- src/main.py (it's where your endpoints should be coded)
-- src/models.py (your database tables and serialization logic)
-- src/utils.py (some reusable classes and functions)
-- src/admin.py (add your models to the admin and manage your data easily)
-
-For a more detailed explanation, look for the tutorial inside the `docs` folder.
-
-## Remember to migrate every time you change your models
-
-You have to migrate and upgrade the migrations for every update you make to your models:
+1. GET /contact/all
 ```
-$ pipenv run migrate (to make the migrations)
-$ pipenv run upgrade  (to update your databse with the migrations)
+    REQUEST (application/json)
+        type: GET
+        body: null
+    RESPONSE (application/json)
+        code: 200 | 404 | 500
+        body: [
+            {
+                "full_name": "Dave Bradley",
+                "email": "dave@gmail.com",
+                "address":"47568 NW 34ST, 33434 FL, USA",
+                "phone":"7864445566",
+                "groups": [2,3]
+            },
+            ...
+        ]
 ```
-
-
-# Manual Installation for Ubuntu & Mac
-
-⚠️ Make sure you have `python 3.6+` and `MySQL` installed on your computer and MySQL is running, then run the following commands:
-```sh
-$ pipenv install (to install pip packages)
-$ pipenv run migrate (to create the database)
-$ pipenv run start (to start the flask webserver)
+2. Crear un nuevo contacto
 ```
-
-
-## Deploy to Heroku
-
-This template is 100% compatible with Heroku[https://www.heroku.com/], just make sure to understand and execute the following steps:
-
-```sh
-// Install heroku
-$ npm i heroku -g
-// Login to heroku on the command line
-$ heroku login -i
-// Create an application (if you don't have it already)
-$ heroku create <your_application_name>
-// Commit and push to heroku (commited your changes)
-$ git push heroku master
+    REQUEST (application/json)
+        type: POST
+        path: /contact
+        body: {
+            "full_name": "Dave Bradley",
+            "email": "dave@gmail.com",
+            "address":"47568 NW 34ST, 33434 FL, USA",
+            "phone":"7864445566",
+            "groups": [2,3]
+        }
+    RESPONSE (application/json)
+        code: 200 | 400 | 500
+        body: {
+            "id": 12
+            "full_name": "Dave Bradley",
+            "email": "dave@gmail.com",
+            "address":"47568 NW 34ST, 33434 FL, USA",
+            "phone":"7864445566",
+            "groups": [2,3]
+        }
 ```
-:warning: For a more detailed explanation on working with .env variables or the MySQL database [read the full guide](https://github.com/4GeeksAcademy/flask-rest-hello/blob/master/docs/DEPLOY_YOUR_APP.md).
+3. Obtener un contacto específico
+```
+    REQUEST (application/json)
+        type: GET
+        path: /contact/{contact_id}
+    RESPONSE (application/json)
+        code: 200 | 404 | 400 | 500
+        body:{
+            "id": 12
+            "full_name": "Dave Bradley",
+            "email": "dave@gmail.com",
+            "address":"47568 NW 34ST, 33434 FL, USA",
+            "phone":"7864445566",
+            "groups": [
+                {
+                    "id": 2,
+                    "name": "Family"
+                },{
+                    "id": 3,
+                    "name": "Gamers"
+                }
+             ]
+        }
+```
+4. Actualizar un contacto dado
+```
+    REQUEST (application/json)
+        type: PUT
+        path: /contact/{contact_id}
+        body: {
+            "full_name": "Dave Bradley",
+            "email": "dave@gmail.com",
+            "address":"47568 NW 34ST, 33434 FL, USA",
+            "phone":"7864445566",
+            "groups": [2,3]
+        }
+    RESPONSE (application/json)
+        code: 200 | 404 | 400 | 500
+        body:{
+            "id": 12
+            "full_name": "Dave Bradley",
+            "email": "dave@gmail.com",
+            "address":"47568 NW 34ST, 33434 FL, USA",
+            "phone":"7864445566",
+            "groups": [2,3]
+        }
+```
+5. Eliminar un contacto por id
+```
+    REQUEST (application/json)
+        type: DELETE
+        path: /contact/{contact_id}
+        body: null
+    RESPONSE (application/json)
+        code: 200 | 404 | 500
+        body: {
+            "deleted": {
+                "id": 12,
+                "full_name": "Dave Bradley",
+            }
+        }
+```
+6. Listar todos los grupos
+```
+    REQUEST (application/json)
+        type: GET
+        path: /group/
+        body: null
+    RESPONSE (application/json)
+        code: 200 | 500
+        body: {
+            "data": [
+                {
+                    "id": 1,
+                    "name": "Work"
+                },{
+                    "id": 2,
+                    "name": "Gamers"
+                }
+            ]
+        }
+```
+7. Obtener un grupo específico
+```
+    REQUEST (application/json)
+        type: GET
+        path: /group/{group_id}
+    RESPONSE (application/json)
+        code: 200 | 404 | 400 | 500
+        body:{
+            "id": 2
+            "name": "Work",
+            "contacts": [
+                {
+                    "id": 12
+                    "full_name": "Dave Bradley",
+                    "email": "dave@gmail.com",
+                    "address":"47568 NW 34ST, 33434 FL, USA",
+                    "phone":"7864445566",
+                    "groups": [2,3]
+                }
+             ]
+        }
+```
+8. Actualizar el id de un grupo dado
+```
+    REQUEST (application/json)
+        type: PUT
+        path: /group/{group_id}
+        body: {
+            "name": "Beach Crew",
+        }
+    RESPONSE (application/json)
+        code: 200 | 404 | 400 | 500
+        body:{
+            "id": 2
+            "name": "Beach Crew",
+        }
+```
+9. Eliminar un grupo por id
+```
+    REQUEST (application/json)
+        type: DELETE
+        path: /group/{group_id}
+        body: null
+    RESPONSE (application/json)
+        code: 200 | 404 | 500
+        body: {
+            "deleted": {
+                "id": 2,
+                "name": "Beach Crew",
+            }
+        }
+```  
+  
+  
+## 💡 ¿Como Comenzar?
+
+1. Comienza leyendo las instrucciones muy cuidadosamente.
+2. Build the database model class Contact and Group.
+3. Implemente el método (POST) para poder agregar algunos contactos y grupos a la base de datos para asegurarse de que tiene datos ficticios.
+4. Crea el GET(all) endpoints. Lista de contactos y lista de grupos.
+5. Implementa el rest de los endpoints.
+6. Conecta tu aplicación de React Contact List usando `fetch`.
+  
+Sugerencia: use Postman como una herramienta de prueba antes de conectar su aplicación frontal (React Contact List).
+## 📖 Fundamentos
+
+Este ejercicio te hará practicar los siguientes fundamentos:
+
+1. Leer la Documentación de la API
+2. Construir una RESTful API
+2. Construir modelos de data
+3. Base de Datos SQL
+4. REST API's
+5. Python Flask
+6. Fetch y async
+  
