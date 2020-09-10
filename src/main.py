@@ -31,51 +31,76 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/agenda', methods=['GET'])
-def get_all_agenda():
-    contact = Contact.query.all() #way to get all the contacts
-    seri_contact= []
-    for person in contact:
-        seri_contact.append(person.serialize())
-    print(contact)
-    return jsonify(seri_contact), 200
+####################        Formal API Documentation    #######################  
+#####  1.-Obtenga una lista de todos los contactos GET /contact/all  #########
 
-@app.route('/add', methods=['POST'])
+@app.route('/contact/all', methods=["GET"])
+
+def getAllContact():
+    if request.method == "GET":
+        contact = Contact.query.all()
+        contact_list = list(map(lambda contact: contact.serialize(), contact))
+        return jsonify(contact_list), 200
+    else:
+        response_body = {
+            "msj":"Metodo request invalido"
+        }
+        return jsonify(response_body), 400
+
+
+##########  2.- Crear un nuevo Contacto POST /contact ########### 
+
+@app.route('/contact', methods=['POST'])
 def add_contact():
     body = request.get_json()
     contact = Contact(full_name=body['full_name'], email=body['email'], address=body['address'], phone=body['phone'])
     db.session.add(contact)
     db.session.commit()
     print(contact)
-    return jsonify(contact.serialize()), 200
+    return jsonify(contact.serialize()), 200   
+    # falta validaciones 400 y 500
+    
+##########  3.- Obtener un Contacto específico (con los objetos del grupo al                    que pertenece) GET /contact/{contact_id} ###########  
 
-@app.route('/delete/<int:id>', methods=['DELETE'])
-def delete_contact(id):
-    contact = Contact.query.get(id)
+@app.route('/contact/<int:contact_id>', methods=["GET"])
+def getSpecificContact(contact_id):
+
+    if request.method == "GET":
+        contact = Contact.query.filter(Contact.id == contact_id)
+        contact_list = list(map(lambda contact: contact.serialize(), contact))
+
+        if contact_list == []:
+            msj="no se encontro el contacto ingresado"
+            return jsonify(msj), 200
+        else:
+            return jsonify(contact_list), 200
+    else:
+            response_body = {"msj":"Metodo invalido request"}
+            return jsonify(response_body), 400
+   #     else:
+    #                response_body = {"msj":"fallo en el servidor"}
+     #               return jsonify(response_body), 500
+      # NOTA /// ACOMODAR EL ERROR 500 PARA MOSTRAR...
+
+##########  4.- Eliminar un Contacto DELETE /contact/{contact_id} ########### 
+
+@app.route('/delete/<int:contact_id>', methods=['DELETE'])
+def delete_contact(contact_id):
+    contact = Contact.query.get(contact_id)
     if contact is None:
         raise APIException('User not found', status_code=404)
     db.session.delete(contact)
     db.session.commit()
     response_body = {
-        "msg": "Hello, you just deleted a contact"
+        "msg": "El contacto a sido eliminado"
     }
     return jsonify(response_body), 200
 
-@app.route('/delete', methods=['DELETE'])
-def delete_all_contacts():
-    contacts = Contact.query.all()
-    for contact in contacts:
-        db.session.delete(contact)
-    db.session.commit()
-    response_body = {
-        "msg": "Hello, you just deleted all contacts"
-    }
-    return jsonify(response_body), 200
-
-@app.route('/update/<int:id>', methods=['PUT'])
-def update_contact(id):
+##########  5.- Actualiza el Contacto UPDATE /contact/{contact_id} ###########     
+@app.route('/contact/<int:contact_id>', methods=['PUT'])
+def update_contact(contact_id):
     body = request.get_json()
-    contact = Contact.query.get(id)
+    contact = Contact.query.get(contact_id)
     if contact is None:
         raise APIException('User not found', status_code=404)
 
@@ -89,6 +114,79 @@ def update_contact(id):
         contact.phone = body['phone']
     db.session.commit()
     return jsonify(contact.serialize()), 200
+
+##########  6.- Obtener una lista de todos los nombres e IDs del grupo                          GET /group/all ###########  
+
+@app.route('/group/all', methods=["GET"])
+
+def getAllGroup():
+    if request.method == "GET":
+        group = Group.query.all()
+        group_list = list(map(lambda group: group.serialize(), group))
+        return jsonify(group_list), 200
+    else:
+        response_body = {
+            "msj":"Metodo invalido request"
+        }
+        return jsonify(response_body), 400
+    
+##########  7.- Crea un nuevo Grupo POST /group  ###########  
+   
+@app.route('/group', methods=['POST'])
+def add_group():
+    body = request.get_json()
+    group = Group(name=body['name'])
+    db.session.add(group)
+    db.session.commit()
+    print(group)
+    return jsonify(group.serialize()), 200   
+
+ 
+ ##########  8.- Obtener un grupo específico (con todos los objetos de contacto relacionados con él) GET /group/{group_id}  ###########  
+
+@app.route('/group/<int:group_id>', methods=["GET"])
+def getSpecificGroup(group_id):
+
+    if request.method == "GET":
+        group = Group.query.filter(Group.id == group_id)
+        group_list = list(map(lambda group: group.serialize(), group))
+
+        if group_list == []:
+            msj="no se encontro el grupo ingresado"
+            return jsonify(msj), 200
+        else:
+            return jsonify(group_list), 200
+    else:
+            response_body = {"msj":"Metodo invalido request"}
+            return jsonify(response_body), 400
+
+ ####  9.- Actualizar el nombre de grupo UPDATE /group/{group_id}  ######  
+
+@app.route('/group/<int:group_id>', methods=['PUT'])
+def update_group(group_id):
+    body = request.get_json()
+    group = Group.query.get(group_id)
+    if group is None:
+        raise APIException('grupo no a sido añadido', status_code=404)
+
+    if "name" in body:
+        group.name = body["name"]
+    db.session.commit()
+    return jsonify(group.serialize()), 200
+
+ ####  10.- Elimina un Grupo DELETE /group/{group_id}  ######  
+
+@app.route('/group/<int:group_id>', methods=['DELETE'])
+def delete_group(group_id):
+    group = Group.query.get(group_id)
+    if group is None:
+        raise APIException('grupo no a sido eliminado', status_code=404)
+    db.session.delete(group)
+    db.session.commit()
+    response_body = {
+        "msg": "El grupo a sido eliminado"
+    }
+    return jsonify(response_body), 200
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
