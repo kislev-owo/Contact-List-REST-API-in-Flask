@@ -46,6 +46,7 @@ def getAllContact():
             "msj":"Metodo request invalido"
         }
         return jsonify(response_body), 400
+        
 
 
 ##########  2.- Crear un nuevo Contacto POST /contact ########### 
@@ -88,7 +89,7 @@ def getSpecificContact(contact_id):
 def delete_contact(contact_id):
     contact = Contact.query.get(contact_id)
     if contact is None:
-        raise APIException('User not found', status_code=404)
+        raise APIException('Contacto no encontrado', status_code=404)
     db.session.delete(contact)
     db.session.commit()
     response_body = {
@@ -102,7 +103,7 @@ def update_contact(contact_id):
     body = request.get_json()
     contact = Contact.query.get(contact_id)
     if contact is None:
-        raise APIException('User not found', status_code=404)
+        raise APIException('Contacto no encontrado', status_code=404)
 
     if "full_name" in body:
         contact.full_name = body["full_name"]
@@ -152,7 +153,7 @@ def getSpecificGroup(group_id):
         group_list = list(map(lambda group: group.serialize(), group))
 
         if group_list == []:
-            msj="no se encontro el grupo ingresado"
+            msj="No se encontro el grupo ingresado"
             return jsonify(msj), 200
         else:
             return jsonify(group_list), 200
@@ -167,7 +168,7 @@ def update_group(group_id):
     body = request.get_json()
     group = Group.query.get(group_id)
     if group is None:
-        raise APIException('grupo no a sido añadido', status_code=404)
+        raise APIException('grupo no ha sido añadido', status_code=404)
 
     if "name" in body:
         group.name = body["name"]
@@ -180,11 +181,11 @@ def update_group(group_id):
 def delete_group(group_id):
     group = Group.query.get(group_id)
     if group is None:
-        raise APIException('grupo no a sido eliminado', status_code=404)
+        raise APIException('grupo no ha sido eliminado', status_code=404)
     db.session.delete(group)
     db.session.commit()
     response_body = {
-        "msg": "El grupo a sido eliminado"
+        "msg": "El grupo ha sido eliminado"
     }
     return jsonify(response_body), 200
 

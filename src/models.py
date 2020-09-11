@@ -9,7 +9,7 @@ class Contact(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     address = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(15), nullable=False)
-    Subscription = db.relationship("Subscription", backref="Contact")    
+    subscriptions = db.relationship("Subscription", backref="contact")    
 
     def __init__(self, full_name, email, address, phone):
         self.full_name = full_name
@@ -53,10 +53,9 @@ class Contact(db.Model):
             "full_name": self.full_name,
             "email": self.email,
             "address": self.address,
-            "phone": self.phone
+            "phone": self.phone,
+            "groups": [subscription.group_id for subscription in self.subscriptions]
         }       
-
-
 
 class Subscription(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -84,7 +83,7 @@ class Subscription(db.Model):
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
-    Subscription = db.relationship("Subscription", backref="Group")    
+    subscriptions = db.relationship("Subscription", backref="group")    
 
     def __init__(self, name):
         self.name = name   
