@@ -46,21 +46,33 @@ def getAllContact():
             "msj":"Metodo request invalido"
         }
         return jsonify(response_body), 400
-        
 
 
 ##########  2.- Crear un nuevo Contacto POST /contact ########### 
 
-@app.route('/contact', methods=['POST'])
+@app.route('/contact', methods=["GET", "POST",])
 def add_contact():
-    body = request.get_json()
-    contact = Contact(full_name=body['full_name'], email=body['email'], address=body['address'], phone=body['phone'])
-    db.session.add(contact)
-    db.session.commit()
-    print(contact)
-    return jsonify(contact.serialize()), 200   
-    # falta validaciones 400 y 500
-    
+    if request.method == "POST":  
+     body = request.get_json()
+     contact = Contact(full_name=body['full_name'], email=body['email'], address=body['address'], phone=body['phone'])
+     db.session.add(contact)
+   #  db.session.commit()
+    # print(contact)
+    #return jsonify(contact.serialize()), 200   
+
+    try:
+        db.session.commit()
+        # devolvemos el nuevo donante serializado y 200_CREATED
+        return jsonify(contact.serialize()), 200
+    except Exception as error:
+        db.session.rollback()
+        print(f"{error.args} {type(error)}")
+        # devolvemos "mira, tuvimos este error..."
+        return jsonify({
+            "Presenete error": f"{error.args}"
+        }), 500
+
+
 ##########  3.- Obtener un Contacto específico (con los objetos del grupo al                    que pertenece) GET /contact/{contact_id} ###########  
 
 @app.route('/contact/<int:contact_id>', methods=["GET"])
@@ -78,10 +90,6 @@ def getSpecificContact(contact_id):
     else:
             response_body = {"msj":"Metodo invalido request"}
             return jsonify(response_body), 400
-   #     else:
-    #                response_body = {"msj":"fallo en el servidor"}
-     #               return jsonify(response_body), 500
-      # NOTA /// ACOMODAR EL ERROR 500 PARA MOSTRAR...
 
 ##########  4.- Eliminar un Contacto DELETE /contact/{contact_id} ########### 
 
@@ -90,12 +98,30 @@ def delete_contact(contact_id):
     contact = Contact.query.get(contact_id)
     if contact is None:
         raise APIException('Contacto no encontrado', status_code=404)
-    db.session.delete(contact)
-    db.session.commit()
-    response_body = {
-        "msg": "El contacto a sido eliminado"
-    }
-    return jsonify(response_body), 200
+   # db.session.delete(contact)
+  #  db.session.commit()
+   # response_body = {
+    #    "msg": "El contacto a sido eliminado"
+    #}
+    #return jsonify(response_body), 200
+
+    else:
+        # remover el donante específico de la sesión de base de datos
+        db.session.delete(contact)
+        # hacer commit y devolver 204
+        try:
+            db.session.commit()
+            response_body = {
+           "msg": "El contacto a sido eliminado"
+           }
+            return jsonify(response_body), 200
+        except Exception as error:
+            db.session.rollback()
+            print(f"{error.args} {type(error)}")
+            return jsonify({
+                "resultado": f"{error.args}"
+            }), 500
+
 
 ##########  5.- Actualiza el Contacto UPDATE /contact/{contact_id} ###########     
 @app.route('/contact/<int:contact_id>', methods=['PUT'])
@@ -113,8 +139,20 @@ def update_contact(contact_id):
         contact.address = body['address']
     if "phone" in body:
         contact.phone = body['phone']
-    db.session.commit()
-    return jsonify(contact.serialize()), 200
+  # db.session.commit()
+   # return jsonify(contact.serialize()), 200
+
+    try:
+        db.session.commit()
+        # devolvemos el nuevo donante serializado y 200_CREATED
+        return jsonify(contact.serialize()), 200
+    except Exception as error:
+        db.session.rollback()
+        print(f"{error.args} {type(error)}")
+        # devolvemos "mira, tuvimos este error..."
+        return jsonify({
+            "Presenete error": f"{error.args}"
+        }), 500    
 
 ##########  6.- Obtener una lista de todos los nombres e IDs del grupo                          GET /group/all ###########  
 
@@ -138,10 +176,21 @@ def add_group():
     body = request.get_json()
     group = Group(name=body['name'])
     db.session.add(group)
-    db.session.commit()
-    print(group)
-    return jsonify(group.serialize()), 200   
+  #  db.session.commit()
+  #  print(group)
+  #  return jsonify(group.serialize()), 200   
 
+    try:
+        db.session.commit()
+        # devolvemos el nuevo donante serializado y 200_CREATED
+        return jsonify(group.serialize()), 200
+    except Exception as error:
+        db.session.rollback()
+        print(f"{error.args} {type(error)}")
+        # devolvemos "mira, tuvimos este error..."
+        return jsonify({
+            "Presenete error": f"{error.args}"
+        }), 500
  
  ##########  8.- Obtener un grupo específico (con todos los objetos de contacto relacionados con él) GET /group/{group_id}  ###########  
 
@@ -172,8 +221,20 @@ def update_group(group_id):
 
     if "name" in body:
         group.name = body["name"]
-    db.session.commit()
-    return jsonify(group.serialize()), 200
+  #  db.session.commit()
+   # return jsonify(group.serialize()), 200
+
+    try:
+        db.session.commit()
+        # devolvemos el nuevo donante serializado y 200_CREATED
+        return jsonify(group.serialize()), 200
+    except Exception as error:
+        db.session.rollback()
+        print(f"{error.args} {type(error)}")
+        # devolvemos "mira, tuvimos este error..."
+        return jsonify({
+            "Presenete error": f"{error.args}"
+        }), 500        
 
  ####  10.- Elimina un Grupo DELETE /group/{group_id}  ######  
 
@@ -181,13 +242,32 @@ def update_group(group_id):
 def delete_group(group_id):
     group = Group.query.get(group_id)
     if group is None:
-        raise APIException('grupo no ha sido eliminado', status_code=404)
-    db.session.delete(group)
-    db.session.commit()
-    response_body = {
-        "msg": "El grupo ha sido eliminado"
-    }
-    return jsonify(response_body), 200
+        raise APIException('grupo no ha sido encontrado', status_code=404)
+   # db.session.delete(group)
+   # db.session.commit()
+    #response_body = {
+     #   "msg": "El grupo ha sido eliminado"
+    #}
+    #return jsonify(response_body), 200
+
+    else:
+        # remover el donante específico de la sesión de base de datos
+        db.session.delete(group)
+        # hacer commit y devolver 204
+        try:
+            db.session.commit()
+            response_body = {
+           "msg": "El grupo a sido eliminado"
+           }
+            return jsonify(response_body), 200
+        except Exception as error:
+            db.session.rollback()
+            print(f"{error.args} {type(error)}")
+            return jsonify({
+                "resultado": f"{error.args}"
+            }), 500
+
+
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':

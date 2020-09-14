@@ -82,8 +82,9 @@ class Subscription(db.Model):
 
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False)
+    name = db.Column(db.String(120), unique=True, nullable=False)
     subscriptions = db.relationship("Subscription", backref="group")    
+
 
     def __init__(self, name):
         self.name = name   
@@ -92,9 +93,9 @@ class Group(db.Model):
     def addn(cls, name):
         """ Normalizacion de los grupos """
         add = cls(
-            name.lower().capitalize())
+            name)
         return add
-
+    
     def update(self, diccionario):
         """Actualizacion de contacto"""
         if "name" in diccionario:
@@ -102,7 +103,7 @@ class Group(db.Model):
         return True 
 
     def __repr__(self):
-        return '<Group %r>' % self.name             
+        return '<Group %r>' % self.name     
 
     def serialize(self):
         return {
